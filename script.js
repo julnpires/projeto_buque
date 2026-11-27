@@ -166,20 +166,18 @@ const BASE_X = 60, BASE_Y = 40;
 
 // formato de coração: largo em cima, ponta embaixo
 const buque = [
-  // atrás
-  { flor: hortensia,  x: 40, y: 14, R: 7 },
-  { flor: hortensia,  x: 80, y: 14, R: 7 },
-  // vãos e laterais
+  // atrás, nas laterais
+  { flor: hortensia,  x: 37, y: 18, R: 7 },
+  { flor: hortensia,  x: 83, y: 18, R: 7 },
+  // vãos
   { flor: crisantemo, x: 60, y: 9,  R: 5 },
-  { flor: crisantemo, x: 27, y: 24, R: 4 },
-  { flor: crisantemo, x: 93, y: 24, R: 4 },
-  { flor: crisantemo, x: 47, y: 37, R: 3 },
-  { flor: crisantemo, x: 73, y: 37, R: 3 },
+  { flor: crisantemo, x: 25, y: 31, R: 5 },
+  { flor: crisantemo, x: 95, y: 31, R: 5 },
+  { flor: crisantemo, x: 60, y: 35, R: 4 },
   // frente (principal)
-  { flor: cravo,      x: 60, y: 20, R: 6 },
-  { flor: cravo,      x: 44, y: 29, R: 5 },
-  { flor: cravo,      x: 76, y: 29, R: 5 },
-  { flor: cravo,      x: 60, y: 34, R: 4 },
+  { flor: cravo,      x: 60, y: 21, R: 7 },
+  { flor: cravo,      x: 44, y: 31, R: 6 },
+  { flor: cravo,      x: 76, y: 31, R: 6 },
 ];
 
 // feixe de caules amarrado com fita
