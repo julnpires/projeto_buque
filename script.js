@@ -68,95 +68,133 @@ function folha(x, y, lado, ordem) {
 }
 // a flor vai usar o momento em que o caule chegar la em cima p comecar a abrir
 
-// escolhe um tom da lista pelo "nível" de sombra (0 = mais claro)
-function tom(tons, nivel) {
-  return tons[Math.max(0, Math.min(tons.length - 1, Math.round(nivel)))];
+// ===== utilitários =====
+function limitar(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function dente(z) { return Math.abs((z - Math.floor(z)) - 0.5) * 2; }   // zigue-zague de 0 a 1
+
+// caractere de traço que aponta na direção (dx, dy) da tela
+function traco(dx, dy) {
+  let a = Math.atan2(dy, dx);
+  if (a < 0) a += Math.PI;
+  if (a < Math.PI / 8 || a > 7 * Math.PI / 8) return '-';
+  if (a < 3 * Math.PI / 8) return '\\';
+  if (a < 5 * Math.PI / 8) return '|';
+  return '/';
 }
 
-// cravo rosa (camada 3, a da frente)
+// ===== CRAVO ROSA (visto de lado) =====
+// cabeça fofa com franjas serrilhadas em cima + cálice verde comprido embaixo
 function cravo(cx, cy, R, atraso) {
-  const tons = ['#ffe0ea', '#ffc2d4', '#ff9fbe', '#f47ba4', '#e05a8e', '#c4467a'];
-  for (let y = -R; y <= R; y++) {
-    for (let x = -2 * R; x <= 2 * R; x++) {
-      const dx = x / 2;
-      const r = Math.hypot(dx, y);
-      const t = Math.atan2(y, dx);
-      const borda = R * (0.88 + 0.1 * Math.sin(13 * t) + 0.05 * Math.sin(29 * t + 1));
-      if (r > borda) continue;
+  const rosa  = ['#ffe0ea', '#ffbcd2', '#ff95b6', '#f2709c', '#d64f82', '#b23a6a'];  // claro -> escuro
+  const verde = ['#9ad69a', '#6fbf6f', '#4d9a58', '#357a42'];
 
-      // anéis ondulados = camadas de pétalas
-      const anel = r / R * 4 + 0.6 * Math.sin(11 * t + r);
-      const dobra = anel - Math.floor(anel) > 0.72;     // vinco entre pétalas
-      const luz = (-dx - y) / (2 * R);                  // luz vindo de cima/esquerda
+  // cabeça: oval achatada, centro um pouco acima de cy
+  for (let y = -R - 1; y <= Math.ceil(R * 0.35); y++) {
+    for (let x = -2 * R - 2; x <= 2 * R + 2; x++) {
+      const u = x / (2 * R), v = (y + 0.3 * R) / (0.65 * R);
+      const t = Math.atan2(v, u);
+      const d = Math.hypot(u, v);
+      const franja = v < 0 ? 0.16 * dente(t * 14 / Math.PI) : 0;    // dentinhos só em cima
+      const borda = 1 + franja;
+      if (d > borda || y > R * 0.35) continue;
 
-      let nivel = 2 - luz * 3;
-      if (dobra) nivel += 2;
-      if (r > borda - 0.9) nivel += 1.5;                // contorno mais escuro
-      if (r < R * 0.25) nivel += 1;                     // miolo fechado
-
-      const ch = dobra ? '&' : (r < R * 0.25 ? '@' : '%');
-      plot(cx + x, cy + y, ch, tom(tons, nivel), atraso + r * 2, 3);
-    }
-  }
-}
-
-// hortênsia azul (camada 1, atrás): bola de florzinhas (*)
-function hortensia(cx, cy, R, atraso) {
-  const tons = ['#d4e9ff', '#a8d1ff', '#84b9f2', '#5f97dc', '#3f74b8'];
-  for (let y = -R; y <= R; y++) {
-    for (let x = -2 * R; x <= 2 * R; x++) {
-      const dx = x / 2;
-      const r = Math.hypot(dx, y);
-      const t = Math.atan2(y, dx);
-      const borda = R * (0.9 + 0.1 * Math.sin(6 * t));
-      if (r > borda) continue;
-
-      // cada florzinha ocupa 4 colunas: ( * ) e um espaço; linhas alternadas deslocadas
-      const u = ((x + (y & 1) * 2) % 4 + 4) % 4;
-      const ch = ['(', '*', ')', ' '][u];
-      const luz = (-dx - y) / (2 * R);
-
-      let nivel = 1.8 - luz * 3;
-      if (u === 1) nivel -= 1;                          // miolo da florzinha mais claro
-      if (r > borda - 0.9) nivel += 1;
-      plot(cx + x, cy + y, ch, tom(tons, nivel), atraso + r * 2, 1);
-    }
-  }
-}
-
-// crisântemo branco (camada 2): duas camadas de pétalas finas
-function crisantemo(cx, cy, R, atraso) {
-  const tons = ['#ffffff', '#f0f0f6', '#d8d8e4', '#b4b4c6'];
-  const n = 8;                                          // 16 pétalas por camada
-  for (let y = -R; y <= R; y++) {
-    for (let x = -2 * R; x <= 2 * R; x++) {
-      const dx = x / 2;
-      const r = Math.hypot(dx, y);
-      const t = Math.atan2(y, dx);
-
-      if (r < R * 0.22) {                               // miolo amarelo
-        plot(cx + x, cy + y, r < R * 0.12 ? '@' : 'o', '#f0d878', atraso + r * 2, 2);
-        continue;
+      let ch, nivel;
+      if (d > borda - 0.13 && v < 0) {                // pontinhas das pétalas
+        ch = '^'; nivel = 0.5;
+      } else {
+        const onda = (v + 1) * 3.2 + 0.35 * Math.sin(u * 11 + v * 4);  // babados em camadas
+        const dobra = onda - Math.floor(onda) < 0.28;
+        const luz = -0.6 * u - 0.5 * v;              // claro em cima/esquerda
+        nivel = 2.4 - luz * 2 + (dobra ? 1.6 : 0) + (d > 0.85 ? 0.8 : 0);
+        ch = dobra ? '~' : (luz > 0.2 ? '%' : '&');
       }
+      plot(cx + x, cy + y, ch, rosa[limitar(Math.round(nivel), 0, 5)], atraso + 4 + (1 - v) * R * 0.8, 3);
+    }
+  }
 
-      const ext = Math.abs(Math.cos(n * t));            // pétalas de fora
-      const int = Math.abs(Math.sin(n * t));            // pétalas de dentro (entre as de fora)
-      const naExterna = ext > 0.3 && r < R * (0.4 + 0.6 * Math.sqrt(ext));
-      const naInterna = int > 0.3 && r < R * (0.3 + 0.35 * Math.sqrt(int));
-      if (!naExterna && !naInterna) continue;
-
-      const a = t < 0 ? t + Math.PI : t;
+  // cálice: tubo verde que afina para baixo, com sépalas pontudas em cima
+  const yIni = Math.round(R * 0.3), yFim = Math.round(R * 1.2);
+  for (let y = yIni; y <= yFim; y++) {
+    const h = (y - yIni) / (yFim - yIni);
+    const meia = Math.max(1, Math.round(R * (0.75 - 0.4 * h)));
+    for (let x = -meia; x <= meia; x++) {
       let ch;
-      if (a < Math.PI / 8 || a > 7 * Math.PI / 8) ch = '-';
-      else if (a < 3 * Math.PI / 8)               ch = '\\';
-      else if (a < 5 * Math.PI / 8)               ch = '|';
-      else                                        ch = '/';
+      if (y === yIni) ch = (x + meia) % 2 ? '/' : '\\';        // sépalas: \/\/\/
+      else if (x === -meia) ch = '(';
+      else if (x === meia)  ch = ')';
+      else ch = '|';
+      const nivel = (x < 0 ? 0 : 1) + (x === meia ? 2 : 0) + h;
+      plot(cx + x, cy + y, ch, verde[limitar(Math.round(nivel), 0, 3)], atraso + 4 * (1 - h), 3.1);
+    }
+  }
+}
 
-      const luz = (-dx - y) / (2 * R);
-      let nivel = 1 - luz * 2;
-      if (naInterna && !naExterna) nivel += 1;          // camada de dentro na sombra
-      if ((naExterna ? ext : int) < 0.45) nivel += 1;   // beirada da pétala
-      plot(cx + x, cy + y, ch, tom(tons, nivel), atraso + r * 2, 2);
+// ===== HORTÊNSIA AZUL =====
+// bola feita de dezenas de florzinhas de 4 pétalas:   (@)
+//                                                   (@o@)
+//                                                    (@)
+function hortensia(cx, cy, R, atraso) {
+  const azul = ['#e6f2ff', '#c8e2ff', '#a6cdf8', '#88b8f0', '#6ea0e2', '#5a8bcf'];  // claro -> escuro
+  const desenho = [' (@) ', '(@o@)', ' (@) '];
+  let i = 0;
+  for (let gy = -R; gy <= R; gy += 2) {
+    const linha = Math.round((gy + R) / 2);
+    for (let gx = -2 * R + (linha % 2) * 3; gx <= 2 * R; gx += 6) {
+      if ((gx / 2) ** 2 + gy ** 2 > (R - 0.5) ** 2) continue;
+      const luz = (-gx / 2 - gy) / (2 * R);                    // -1 .. 1
+      const base = limitar(Math.round(2.2 - luz * 2.5 + (Math.random() - 0.5) * 1.2), 0, 4);
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 5; c++) {
+          const ch = desenho[r][c];
+          if (ch === ' ') continue;
+          let cor = azul[base];
+          if (ch === '(' || ch === ')') cor = azul[limitar(base + 2, 0, 5)];   // contorno da pétala
+          if (ch === 'o') cor = '#ffffff';                                   // miolinho
+          // florzinhas de baixo ficam na frente das de cima
+          plot(cx + gx + c - 2, cy + gy + r - 1, ch, cor, atraso + i * 0.3, 1 + (gy + R) * 0.002);
+        }
+      }
+      i++;
+    }
+  }
+}
+
+// ===== CRISÂNTEMO BRANCO (de frente) =====
+// três camadas de pétalas compridas saindo do centro + miolo amarelo
+function crisantemo(cx, cy, R, atraso) {
+  const branco = ['#ffffff', '#f0f0f8', '#dcdce8', '#bdbdd0'];
+  const miolo  = ['#fbf0a0', '#ecd85e', '#c9b43a'];
+  const achatar = 0.85;
+  const camadas = [
+    { n: 18, de: 0.3,  ate: 1.0,  giro: 0,    camada: 2.0, tom: 1 },   // de fora (mais atrás)
+    { n: 15, de: 0.25, ate: 0.75, giro: 0.5,  camada: 2.1, tom: 0 },
+    { n: 12, de: 0.2,  ate: 0.5,  giro: 0.25, camada: 2.2, tom: 0 },   // de dentro
+  ];
+  for (const k of camadas) {
+    for (let p = 0; p < k.n; p++) {
+      const a0 = (p + k.giro) / k.n * 2 * Math.PI;
+      for (let r = k.de * R; r <= k.ate * R; r += 0.2) {
+        const a = a0 + 0.1 * (r / R) ** 2;                       // pontinha curvada
+        const dx = 2 * Math.cos(a), dy = Math.sin(a) * achatar;
+        const ch = traco(dx, dy);
+        const meio = (r - k.de * R) / ((k.ate - k.de) * R);      // 0 na base, 1 na ponta
+        const largura = Math.sin(meio * Math.PI) * 0.07;         // pétala mais larga no meio
+        const nivel = k.tom + (Math.sin(a) < -0.3 ? 1 : 0) + (meio < 0.15 ? 1 : 0);
+        for (const lado of [-largura, 0, largura]) {
+          const b = a + lado;
+          plot(cx + r * 2 * Math.cos(b), cy + r * Math.sin(b) * achatar, ch,
+               branco[limitar(nivel, 0, 3)], atraso + r * 2, k.camada);
+        }
+      }
+    }
+  }
+  // miolo: bolinha pontilhada
+  const m = R * 0.22;
+  for (let y = -Math.ceil(m); y <= Math.ceil(m); y++) {
+    for (let x = -Math.ceil(2 * m); x <= Math.ceil(2 * m); x++) {
+      const d = Math.hypot(x / 2, y / achatar) / m;
+      if (d > 1) continue;
+      plot(cx + x, cy + y, (x + y) % 2 ? 'o' : '@', miolo[limitar(Math.round(d * 2), 0, 2)], atraso, 2.3);
     }
   }
 }
