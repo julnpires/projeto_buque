@@ -166,9 +166,9 @@ function crisantemo(cx, cy, R, atraso) {
   const miolo  = ['#fbf0a0', '#ecd85e', '#c9b43a'];
   const achatar = 0.85;
   const camadas = [
-    { n: 18, de: 0.3,  ate: 1.0,  giro: 0,    camada: 2.0, tom: 1 },   // de fora (mais atrás)
-    { n: 15, de: 0.25, ate: 0.75, giro: 0.5,  camada: 2.1, tom: 0 },
-    { n: 12, de: 0.2,  ate: 0.5,  giro: 0.25, camada: 2.2, tom: 0 },   // de dentro
+    { n: Math.round(2.6 * R), de: 0.3,  ate: 1.0,  giro: 0,    camada: 2.0, tom: 1 },   // de fora (mais atrás)
+    { n: Math.round(2.1 * R), de: 0.25, ate: 0.75, giro: 0.5,  camada: 2.1, tom: 0 },
+    { n: Math.round(1.6 * R), de: 0.2,  ate: 0.5,  giro: 0.25, camada: 2.2, tom: 0 },   // de dentro
   ];
   for (const k of camadas) {
     for (let p = 0; p < k.n; p++) {
