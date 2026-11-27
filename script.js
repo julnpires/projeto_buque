@@ -116,7 +116,7 @@ function cravo(cx, cy, R, atraso) {
   const yIni = Math.round(R * 0.3), yFim = Math.round(R * 1.2);
   for (let y = yIni; y <= yFim; y++) {
     const h = (y - yIni) / (yFim - yIni);
-    const meia = Math.max(1, Math.round(R * (0.75 - 0.4 * h)));
+    const meia = Math.max(1, Math.round(R * (0.5 - 0.25 * h)));
     for (let x = -meia; x <= meia; x++) {
       let ch;
       if (y === yIni) ch = (x + meia) % 2 ? '/' : '\\';        // sépalas: \/\/\/
