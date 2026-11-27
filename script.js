@@ -32,7 +32,7 @@ function animar() {
     let tempo = 0, i = 0;
 
     function frame() {
-        tempo += 0.5;
+        tempo += 0.9;
         while (i < celulas.length && celulas[i].ordem <= tempo) {
             const c = celulas[i++];
             const atual = grade[c.y][c.x];
