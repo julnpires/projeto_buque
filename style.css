@@ -12,6 +12,7 @@ body {
     margin: 0;
     font-family: monospace;
     line-height: 1;
+    font-weight: bold;
     font-size: min(1.35vw, 12px);
 }
 
