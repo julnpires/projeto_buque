@@ -242,12 +242,11 @@ function montarBuque() {
   folhaGrande(90, 28, 10,  1, 25);
 }
 
-// caracteres das flores trocando sozinhos (o "brilho")
+// brilho sutil: só alguns caracteres trocam, e por outros parecidos
 const TROCAS = {
-  '%': '%%&', '&': '&&%', '@': '@@%',  // cravo (trocas sutis)
-  '*': '**+',                          // miolo das florzinhas da hortênsia
-  '-': '--~', '|': '||!', 'o': 'oo@',  // crisântemo
-  ':': '::.',                          // ramos
+  '%': '%%&', '&': '&&%',      // miolo do cravo
+  '@': '@@@O',                 // pétalas da hortênsia
+  ':': '::.',                  // ramos
 };
 
 function brilhar(qtd = 40) {
