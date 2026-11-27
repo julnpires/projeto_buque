@@ -199,26 +199,96 @@ function crisantemo(cx, cy, R, atraso) {
   }
 }
 
-// montagem do buquê
-const BASE_X = 60, BASE_Y = 40;
+// ================= MONTAGEM DO BUQUÊ =================
+// As posições abaixo estão na "escala antiga" (120 x 50) e são multiplicadas por S.
+const E = v => Math.round(v * S);
+const BASE_X = E(60), BASE_Y = E(41);
 
-// formato de coração: largo em cima, ponta embaixo
 const buque = [
   // atrás, nas laterais
   { flor: hortensia,  x: 37, y: 18, R: 7 },
   { flor: hortensia,  x: 83, y: 18, R: 7 },
   // vãos
-  { flor: crisantemo, x: 60, y: 9,  R: 5 },
-  { flor: crisantemo, x: 25, y: 31, R: 5 },
-  { flor: crisantemo, x: 95, y: 31, R: 5 },
-  { flor: crisantemo, x: 60, y: 35, R: 4 },
+  { flor: crisantemo, x: 60, y: 8,  R: 5 },
+  { flor: crisantemo, x: 24, y: 30, R: 5 },
+  { flor: crisantemo, x: 96, y: 30, R: 5 },
+  { flor: crisantemo, x: 60, y: 34, R: 4 },
   // frente (principal)
-  { flor: cravo,      x: 60, y: 21, R: 7 },
-  { flor: cravo,      x: 44, y: 31, R: 6 },
-  { flor: cravo,      x: 76, y: 31, R: 6 },
+  { flor: cravo,      x: 60, y: 20, R: 7 },
+  { flor: cravo,      x: 43, y: 30, R: 6 },
+  { flor: cravo,      x: 77, y: 30, R: 6 },
 ];
 
-// feixe de caules amarrado com fita
+// número "aleatório" fixo por posição (a textura não muda a cada recarga)
+function ruido(x, y) {
+  const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+// folhagem: preenche os vãos entre as flores com folhinhas verdes e mosquitinhos
+function folhagem(margem, atraso) {
+  const verdes = ['#6fbf6f', '#4f9f55', '#3d8547', '#2e6b39', '#23552d'];
+  const chars = ['\'', '`', ',', ';', '~', '"'];
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      // distância até a borda da flor mais próxima
+      let perto = Infinity;
+      for (const f of buque) {
+        const d = Math.hypot((x - E(f.x)) / 2, y - E(f.y)) - E(f.R);
+        perto = Math.min(perto, d);
+      }
+      if (perto > margem * (0.6 + 0.6 * ruido(Math.round(x / 4), Math.round(y / 3)))) continue;
+      const r = ruido(x, y);
+      if (r < 0.3) continue;                              // buraquinhos: textura mais leve
+      if (r > 0.975) {                                    // mosquitinho
+        plot(x, y, '*', '#ffffff', atraso + 15 + perto, 0.6);
+        continue;
+      }
+      const nivel = Math.round(1 + (r - 0.3) * 3 + (y > E(30) ? 1 : 0));
+      plot(x, y, chars[Math.floor(r * 97) % chars.length], verdes[limitar(nivel, 0, 4)], atraso + 8 + perto, 0.3);
+    }
+  }
+}
+
+// papel de embrulho em cone, na frente dos caules e atrás das flores
+function embrulho(cx, yTopo, yFim, larguraTopo, atraso) {
+  const papel = ['#fde8ee', '#f7d3de', '#eebccb', '#e0a3b6', '#cc89a0'];
+  for (let y = yTopo; y <= yFim; y++) {
+    const h = (y - yTopo) / (yFim - yTopo);
+    const meia = larguraTopo * (1 - h) + 3 * h;
+    for (let x = Math.ceil(cx - meia); x <= cx + meia; x++) {
+      const lado = (x - cx) / meia;                         // -1 .. 1
+      if (y === yTopo && ruido(x, y) < 0.4) continue;      // beirada recortada
+      const dobra = (lado * 2.5 + 10) % 1;                 // vincos do papel
+      let ch, nivel = 1.5 + lado * 1.2 + h;                // mais escuro à direita e embaixo
+      if (dobra < 0.12)      { ch = lado < 0 ? '/' : '\\'; nivel += 1.5; }
+      else if (Math.abs(lado) > 0.93) { ch = lado < 0 ? '/' : '\\'; nivel += 1; }
+      else ch = h < 0.08 ? '~' : '=';
+      plot(x, y, ch, papel[limitar(Math.round(nivel), 0, 4)], atraso + h * 5, 0.8);
+    }
+  }
+}
+
+// laço de fita
+function laco(cx, cy, atraso) {
+  const desenho = [
+    "  .-~-.     .-~-.  ",
+    " (     '. .'     ) ",
+    "  '-.._  (@)  _..-' ",
+    "        /   \\       ",
+    "       /     \\      ",
+    "      ~       ~     ",
+  ];
+  const cores = { '@': '#ff6f9c' };
+  desenho.forEach((linha, j) => {
+    [...linha].forEach((ch, i) => {
+      if (ch === ' ') return;
+      plot(cx - 9 + i, cy - 2 + j, ch, cores[ch] || (j < 3 ? '#ff9fbe' : '#f47ba4'), atraso + j, 5);
+    });
+  });
+}
+
+// cabo: feixe de caules saindo por baixo do papel
 function cabo(cx, yTopo, yFim) {
   const tons = ['#2f6b3a', '#3a7d44', '#4d9456'];
   let ordem = 0;
@@ -227,55 +297,40 @@ function cabo(cx, yTopo, yFim) {
       plot(x, y, x % 2 ? '|' : '!', tons[(x + y) % 3], ordem, 0);
     }
   }
-  const yFita = Math.round((yTopo + yFim) / 2);
-  for (let x = cx - 5; x <= cx + 5; x++) plot(x, yFita, '=', '#ffd1dc', ordem, 4);
-  plot(cx - 6, yFita, '{', '#ffb3c8', ordem + 1, 4);
-  plot(cx + 6, yFita, '}', '#ffb3c8', ordem + 1, 4);
-  return ordem;                 // momento em que o cabo termina
+  return ordem;
 }
 
-// ramo fino de pontinhos, atrás das flores (camada 0.5)
+// ramo fino de pontinhos (camada 0.5)
 function ramo(x0, y0, x1, y1, cor, atraso) {
   const passos = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
   for (let i = 0; i <= passos; i++) {
     const t = i / passos;
     const x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
     plot(x, y, ':', cor, atraso + i, 0.5);
-    if (i > passos / 2 && Math.random() < 0.5) {
-      plot(x + (Math.random() < 0.5 ? -1 : 1), y, '.', cor, atraso + i + 1, 0.5);
+    if (i > passos / 2 && ruido(i, x0) < 0.5) {
+      plot(x + (ruido(i, y0) < 0.5 ? -1 : 1), y, '.', cor, atraso + i + 1, 0.5);
     }
   }
 }
 
-// folha comprida de riscos, aparecendo pelas bordas
-function folhaGrande(x, y, comprimento, lado, atraso) {
-  for (let i = 0; i < comprimento; i++) {
-    const ch = i % 2 ? '=' : '-';
-    const cor = i < comprimento / 2 ? '#3a7d44' : '#5fae5f';
-    plot(x + lado * i, y - Math.floor(i / 4), ch, cor, atraso + i, 0.5);
-  }
-}
-
 function montarBuque() {
-  const fimCabo = cabo(BASE_X, BASE_Y, 47);
+  const fimCabo = cabo(BASE_X, BASE_Y, H - 4);
+  embrulho(BASE_X, E(27), BASE_Y + 1, E(30), fimCabo);
+  laco(BASE_X, BASE_Y + 2, fimCabo + 6);
+  folhagem(E(4), fimCabo);
 
   for (const f of buque) {
-    const fim = caule(BASE_X, BASE_Y, f.x, f.y + f.R, fimCabo);
-    f.flor(f.x, f.y, f.R, fim);
+    const x = E(f.x), y = E(f.y), R = E(f.R);
+    const fim = caule(BASE_X, BASE_Y, x, y + R, fimCabo);
+    f.flor(x, y, R, fim);
   }
 
   // ramos subindo (branco no meio, lilás nas laterais)
-  ramo(52, 10, 46, 1, '#ffffff', 25);
-  ramo(60, 8,  60, 0, '#ffffff', 25);
-  ramo(68, 10, 74, 1, '#ffffff', 25);
-  ramo(35, 10, 24, 2, '#c9a7ff', 30);
-  ramo(85, 10, 98, 2, '#c9a7ff', 30);
-
-  // folhas saindo pelas bordas
-  folhaGrande(36, 32, 12, -1, 20);
-  folhaGrande(84, 32, 12,  1, 20);
-  folhaGrande(30, 28, 10, -1, 25);
-  folhaGrande(90, 28, 10,  1, 25);
+  ramo(E(52), E(8), E(46), E(0.5), '#ffffff', 40);
+  ramo(E(60), E(4), E(60), 0,       '#ffffff', 40);
+  ramo(E(68), E(8), E(74), E(0.5), '#ffffff', 40);
+  ramo(E(30), E(12), E(18), E(2),  '#c9a7ff', 45);
+  ramo(E(90), E(12), E(102), E(2), '#c9a7ff', 45);
 }
 
 // brilho sutil: só alguns caracteres trocam, e por outros parecidos
