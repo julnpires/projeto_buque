@@ -1,4 +1,5 @@
-const W = 120, H = 50;
+const S = 1.7;
+const W = Math.round(120 * S), H = Math.round(50 * S);
 const tela = document.getElementById('tela');
 let grade = [];
 
