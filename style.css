@@ -13,7 +13,7 @@ body {
     font-family: monospace;
     line-height: 1;
     font-weight: bold;
-    font-size: min(1.35vw, 12px);
+    font-size: min(0.8vw, 8px);
 }
 
 #mensagem {
