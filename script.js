@@ -297,7 +297,7 @@ function brilhar(qtd = 40) {
 
 // esttrelas e mensaem
 
-const estrelas = Array.from({ length: 60 }, () => ({
+const estrelas = Array.from({ length: 120 }, () => ({
   x: Math.floor(Math.random() * W),
   y: Math.floor(Math.random() * H * 0.6),
   acesa: Math.random() < 0.5,
